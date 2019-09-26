@@ -6,17 +6,16 @@ output:
 runtime: shiny
 ---
 
-```{r}
+```{r context="setup", include=FALSE}
 #importing the required libraries
 library(flexdashboard)
 library(DT)
 library(lubridate) #to format dates, which are not in an ideal format
 library(shiny)
+library(dplyr)
+library(ggplot2)
 
-```
 
-
-```{r}
 #data preprocessing and reactivity
 
 #importing the dataset
@@ -26,51 +25,109 @@ billboard_data <- read.csv("C:/Users/prakh/Desktop/Semester III/R Shiny/Homework
 a=mdy(billboard_data$date)
 billboard_data$year<-(year(a))
 
+# Rename "year" column to years to avoid mix up with year() function in lubridate
+colnames(billboard_data)[colnames(billboard_data)=="year"] <- "years"
+
 #dropping unnecessary "date" column
 billboard_data = subset(billboard_data, select = -c(date) )
 
+```
+
+
+
+Inputs {.sidebar}
+-----------------------------------------------------------------------
+
+```{r context="render"}
+
+#X-axis variable
+selectInput(inputId = "y", 
+            label = "Y-axis:",
+            choices = c("Tempo" = "tempo", 
+            "Duration" = "duration_ms",
+            "Loudness" = "loudness",
+            "Energy"="energy"),
+            selected = "Tempo")
+
+
+checkboxGroupInput("years", "Select the year of release for the song:", 
+                   choices = c("2000","2001","2002","2003",
+                               "2004","2005","2006","2007","2008",
+                               "2009","2010","2011","2012","2013",                                                         "2014","2015","2016","2017","2018"),
+                   selected = c("2018"), 
+                   inline = TRUE)
+
+
+```
+
+Outputs
+-----------------------------------------------------------------------
+
+###Data Table for the Selected Filters
+```{r context="server"}
+
 # Subsetting data for filtering based on selection of year of release
 billboard_subset <- reactive({
-req(input$selected_type) # ensure availablity of value before proceeding
-filter(billboard_data, year %in% input$selected_type)
-})
-
-# Updating the size of the sample subset
-observe({
-  updateNumericInput(session, 
-                     inputId = "n_samp",
-                     value = min(1000, nrow(billboard_subset())),
-                     max = nrow(billboard_subset())
+  billboard_data%>%
+  filter(
+    years %in% input$years
   )
 })
 
-# A new dataframe that subsets the sample based on the size requested
-billboard_sample <- reactive({ 
-  req(input$n_samp) 
-  sample_n(billboard_subset(), input$n_samp)
-  })
-
-```
-
-
-Sidebar {.sidebar}
------------------------------------------------------------------------
-
-```{r}
-selectInput("song_year", label = "Select the year of release for the song:",
-            choices = c(2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,
-                        2011,2012,2013,2014,2015,2016,2017,2018), selected = 2015)
-
-```
-
-Column
------------------------------------------------------------------------
-
-```{r}
-#rendering the data table
-DT::renderDataTable(
-  DT::datatable(data = billboard_data[,-30], 
+output$DataTable <- DT::renderDataTable(
+    DT::datatable(data = billboard_subset()[,-30], 
                   options = list(pageLength = 10), 
-                  rownames = FALSE))
+                  rownames = FALSE)
+)
+```
+
+```{r context="render"}
+dataTableOutput("DataTable")
+```
+
+
+###Horizontal bar chart to visualize top artists by year
+
+```{r context="server"}
+top_artists <- reactive({billboard_subset() %>%
+    group_by(artist)  %>%
+    summarise(n_apperance = n()) %>%
+    filter(n_apperance > 1) %>%
+    arrange(desc(n_apperance))%>% slice(1:10)
+
+})
+#pre-setting the black and white theme
+theme_set(theme_bw())
+
+output$plotBar <-renderPlot({
+    ggplot(top_artists(), aes(x = artist, y=n_apperance)) +
+    geom_bar(stat = "identity",  fill = "slateblue3", width = 0.6 ) +
+     labs(title = "Top Artists", x = "Artists", y = "Number of Apperance on the Top 100") +
+     theme(plot.title = element_text(size=15,hjust=-.3,face = "bold"), axis.title =   element_text(size=12)) +
+     geom_text(aes(label=top_artists()$n_apperance), hjust = 2, size = 3, color = 'white') +
+     coord_flip()
+})
+```
+
+```{r context="render"}
+plotOutput("plotBar")
+```
+
+###Bubble plot to compare song characterstics of top artists
+
+```{r context = "server"}
+
+# Scatterplot
+output$plotBubble <-renderPlot({g<-ggplot(top_artists(), aes(artist, input$y)) + 
+  labs(subtitle="How particular musical attributes vary with the top artists?",
+       title="Music Characterstics")
+  g + geom_jitter(aes(col=artist, size=input$y )) + 
+  geom_smooth(aes(col=artist), method="lm", se=F)
+})
 
 ```
+
+```{r context="render"}
+plotOutput("plotBubble")
+```
+
