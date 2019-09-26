@@ -69,9 +69,8 @@ Column
 ```{r}
 #rendering the data table
 DT::renderDataTable(
-  DT::datatable(data = billboard_data, 
+  DT::datatable(data = billboard_data[,-30], 
                   options = list(pageLength = 10), 
-                  rownames = FALSE)
-)
+                  rownames = FALSE))
 
 ```
