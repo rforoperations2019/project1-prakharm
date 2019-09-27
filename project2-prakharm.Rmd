@@ -2,7 +2,7 @@
 title: "Billboard Hot 100 Analysis (2000-2018)"
 output: 
   flexdashboard::flex_dashboard:
-    orientation: columns
+
 runtime: shiny
 ---
 
@@ -35,8 +35,7 @@ billboard_data = subset(billboard_data, select = -c(date) )
 
 
 
-Inputs {.sidebar}
------------------------------------------------------------------------
+#Sidebar {.sidebar}
 
 ```{r context="render"}
 
@@ -60,10 +59,11 @@ checkboxGroupInput("years", "Select the year of release for the song:",
 
 ```
 
-Outputs
------------------------------------------------------------------------
 
-###Data Table for the Selected Filters
+Page 1
+=====================================
+
+
 ```{r context="server"}
 
 # Subsetting data for filtering based on selection of year of release
@@ -76,17 +76,19 @@ billboard_subset <- reactive({
 
 output$DataTable <- DT::renderDataTable(
     DT::datatable(data = billboard_subset()[,-30], 
-                  options = list(pageLength = 10), 
+                  options = list(pageLength = 50, scrollY="300px"), 
                   rownames = FALSE)
 )
 ```
+
 
 ```{r context="render"}
 dataTableOutput("DataTable")
 ```
 
+Page 2
+=====================================
 
-###Horizontal bar chart to visualize top artists by year
 
 ```{r context="server"}
 top_artists <- reactive({billboard_subset() %>%
@@ -109,25 +111,31 @@ output$plotBar <-renderPlot({
 })
 ```
 
+
 ```{r context="render"}
 plotOutput("plotBar")
 ```
 
-###Bubble plot to compare song characterstics of top artists
+Page 3
+=====================================
 
-```{r context = "server"}
+```{r context="server"}
 
-# Scatterplot
-output$plotBubble <-renderPlot({g<-ggplot(top_artists(), aes(artist, input$y)) + 
-  labs(subtitle="How particular musical attributes vary with the top artists?",
-       title="Music Characterstics")
-  g + geom_jitter(aes(col=artist, size=input$y )) + 
-  geom_smooth(aes(col=artist), method="lm", se=F)
+output$plotDensity<-renderPlot({
+  g <- ggplot(billboard_subset(), aes(key, input$y))
+g + geom_violin() + 
+  labs(title="Music Characterstics", 
+       subtitle="How particular musical attributes vary with the top artists?",
+       x="Artist",
+       y=input$y)
+  g + geom_jitter(aes(col=key, size=input$y )) + 
+  geom_smooth(aes(col=key), method="lm", se=F)
 })
-
 ```
+
 
 ```{r context="render"}
-plotOutput("plotBubble")
-```
 
+plotOutput("plotDensity")
+
+```
