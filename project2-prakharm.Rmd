@@ -2,7 +2,6 @@
 title: "Billboard Hot 100 Analysis (2000-2018)"
 output: 
   flexdashboard::flex_dashboard:
-
 runtime: shiny
 ---
 
@@ -31,6 +30,7 @@ colnames(billboard_data)[colnames(billboard_data)=="year"] <- "years"
 #dropping unnecessary "date" column
 billboard_data = subset(billboard_data, select = -c(date) )
 
+
 ```
 
 
@@ -56,7 +56,11 @@ checkboxGroupInput("years", "Select the year of release for the song:",
                    selected = c("2018"), 
                    inline = TRUE)
 
-textInput("artist_name","Search by artist:", value = "Khalid",width = "200px", placeholder = "Khalid")
+
+sliderInput("peak", "Filter by the tracks peak position",
+            min = min(billboard_data$peak_pos), max = max(billboard_data$peak_pos),
+            value = range(billboard_data$peak_pos)
+            )
 
 
 ```
@@ -72,7 +76,9 @@ Data Table
 billboard_subset <- reactive({
   billboard_data%>%
   filter(
-    years %in% input$years
+    years %in% input$years,
+      peak_pos >= input$peak[1],
+      peak_pos <= input$peak[2]
   )
 })
 
@@ -123,9 +129,9 @@ Musical Characterstics
 
 output$plotDensity<-renderPlot({
   g <- ggplot(billboard_subset(), aes(key, input$y))
-g + geom_violin() + 
-  labs(title="Music Characterstics", 
-       subtitle="How particular musical attributes vary with the top artists?",
+g + geom_violin()+ 
+  labs(title="Musical Key Distribution", 
+       subtitle="In music theory, the key of a piece is the group of pitches, or scale, that forms the basis of a music composition in classical, Western art, and Western pop music.",
        x="Artist",
        y=input$y)
   g + geom_jitter(aes(col=key, size=input$y )) + 
@@ -145,21 +151,31 @@ Artist Characteristics
 =====================================
 ```{r context="server"}
 
-search_by_artist <- reactive({
-  billboard_subset()[like(artist,input$artist)]
+top_key <- reactive({billboard_subset() %>%
+    group_by(mode)  %>%
+    summarise(n_apperance = n()) %>%
+    filter(n_apperance > 1) %>%
+    arrange(desc(n_apperance))%>% slice(1:10)
 })
 
-output$DataTable2 <- DT::renderDataTable(
-    DT::datatable(data = search_by_artist(), 
-                  options = list(pageLength = 50, scrollY="300px"), 
-                  rownames = FALSE)
-)
+output$plotSeasonal <- renderPlot({
+
+ggplot(top_key(), aes(mode))+ 
+    geom_bar(aes(fill=mode), width = 0.5) + 
+    theme(axis.text.x = element_text(angle=65, vjust=0.6)) +
+    labs(title="Musical Mode Distribution", 
+       subtitle="While there exist seven musical modes in music, we notice that only two are largely followed by songs in the Hot 100", 
+       caption="In the theory of Western music, a mode is a type of musical scale coupled with a set of characteristic melodic behaviors.",
+       y= input$y)
+  
+}) 
 
 ```
 
+
 ```{r context="render"}
 
-dataTableOutput("DataTable2")
+plotOutput("plotSeasonal")
 
 ```
 
