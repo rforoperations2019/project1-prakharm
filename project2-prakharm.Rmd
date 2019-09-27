@@ -180,3 +180,30 @@ plotOutput("plotSeasonal")
 ```
 
 
+QUICK FACTS! {data-icon="fa-user-circle"}
+=====================================
+```{r setup, include=FALSE}
+# these computing functions are only toy examples
+computeSongs = function(...) return(nrow(billboard_data))
+computeArtists = function(...) return(NROW(unique(billboard_data$artist)))
+computeWeeks = function(...) return(round(mean(billboard_data$weeks)))
+```
+
+###Songs that have featured on the Billboard Hot 100! 
+```{r}
+songs = computeSongs()
+valueBox(songs, icon = "fa-pencil")
+```
+
+###Number of unique artists and pairings that have featured on the Billboard Hot 100!
+```{r}
+artists = computeArtists()
+valueBox(artists,color = "maroon", icon = "fa-comments")
+```
+
+###Average number of weeks that a song spends on the Billboard Hot 100!
+```{r}
+weeks= computeWeeks()
+valueBox(weeks,color = "orange", icon = "fa-comments")
+```
+
