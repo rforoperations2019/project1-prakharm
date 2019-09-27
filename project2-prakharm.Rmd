@@ -66,7 +66,7 @@ sliderInput("peak", "Filter by the tracks peak position",
 ```
 
 
-Data Table
+Data Table {data-icon="fa-table"}
 =====================================
 
 
@@ -94,7 +94,7 @@ output$DataTable <- DT::renderDataTable(
 dataTableOutput("DataTable")
 ```
 
-Top Artists
+Top Artists {data-icon="fa-headset"}
 =====================================
 
 ```{r context="server"}
@@ -122,7 +122,7 @@ output$plotBar <-renderPlot({
 plotOutput("plotBar")
 ```
 
-Musical Characterstics
+Musical Characterstics {data-icon="fa-music"}
 =====================================
 
 ```{r context="server"}
@@ -147,11 +147,11 @@ plotOutput("plotDensity")
 
 
 
-Artist Characteristics
+Artist Characteristics {data-icon="fa-user-circle"}
 =====================================
 ```{r context="server"}
 
-top_key <- reactive({billboard_subset() %>%
+top_mode <- reactive({billboard_subset() %>%
     group_by(mode)  %>%
     summarise(n_apperance = n()) %>%
     filter(n_apperance > 1) %>%
@@ -160,7 +160,7 @@ top_key <- reactive({billboard_subset() %>%
 
 output$plotSeasonal <- renderPlot({
 
-ggplot(top_key(), aes(mode))+ 
+ggplot(top_mode(), aes(mode))+ 
     geom_bar(aes(fill=mode), width = 0.5) + 
     theme(axis.text.x = element_text(angle=65, vjust=0.6)) +
     labs(title="Musical Mode Distribution", 
