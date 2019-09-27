@@ -2,6 +2,8 @@
 title: "Billboard Hot 100 Analysis (2000-2018)"
 output: 
   flexdashboard::flex_dashboard:
+    orientation: rows
+    theme: united
 runtime: shiny
 ---
 
@@ -39,21 +41,14 @@ billboard_data = subset(billboard_data, select = -c(date) )
 
 ```{r context="render"}
 
-#X-axis variable
-selectInput(inputId = "y", 
-            label = "Y-axis:",
-            choices = c("Tempo" = "tempo", 
-            "Duration" = "duration_ms",
-            "Loudness" = "loudness",
-            "Energy"="energy"),
-            selected = "Tempo")
+
 
 
 checkboxGroupInput("years", "Select the year of release for the song:", 
                    choices = c("2000","2001","2002","2003",
                                "2004","2005","2006","2007","2008",
                                "2009","2010","2011","2012","2013",                                                         "2014","2015","2016","2017","2018"),
-                   selected = c("2018"), 
+                   selected = c("2017","2018"), 
                    inline = TRUE)
 
 
@@ -61,6 +56,15 @@ sliderInput("peak", "Filter by the tracks peak position",
             min = min(billboard_data$peak_pos), max = max(billboard_data$peak_pos),
             value = range(billboard_data$peak_pos)
             )
+
+#Y-axis variable
+selectInput(inputId = "y", 
+            label = "Y-axis:",
+            choices = c("Tempo" = "tempo", 
+            "Duration" = "duration_ms",
+            "Loudness" = "loudness",
+            "Energy"="energy"),
+            selected = "Tempo")
 
 
 ```
@@ -192,18 +196,18 @@ computeWeeks = function(...) return(round(mean(billboard_data$weeks)))
 ###Songs that have featured on the Billboard Hot 100! 
 ```{r}
 songs = computeSongs()
-valueBox(songs, icon = "fa-pencil")
+valueBox(songs,color = "olive", icon = "fa-music")
 ```
 
 ###Number of unique artists and pairings that have featured on the Billboard Hot 100!
 ```{r}
 artists = computeArtists()
-valueBox(artists,color = "maroon", icon = "fa-comments")
+valueBox(artists,color = "orange", icon = "fa-volume-up")
 ```
 
 ###Average number of weeks that a song spends on the Billboard Hot 100!
 ```{r}
 weeks= computeWeeks()
-valueBox(weeks,color = "orange", icon = "fa-comments")
+valueBox(weeks,color = "teal", icon = "fa-calendar-alt")
 ```
 
