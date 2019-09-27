@@ -14,7 +14,7 @@ library(lubridate) #to format dates, which are not in an ideal format
 library(shiny)
 library(dplyr)
 library(ggplot2)
-
+library(data.table)# to perform substring match
 
 #data preprocessing and reactivity
 
@@ -56,11 +56,13 @@ checkboxGroupInput("years", "Select the year of release for the song:",
                    selected = c("2018"), 
                    inline = TRUE)
 
+textInput("artist_name","Search by artist:", value = "Khalid",width = "200px", placeholder = "Khalid")
+
 
 ```
 
 
-Page 1
+Data Table
 =====================================
 
 
@@ -86,9 +88,8 @@ output$DataTable <- DT::renderDataTable(
 dataTableOutput("DataTable")
 ```
 
-Page 2
+Top Artists
 =====================================
-
 
 ```{r context="server"}
 top_artists <- reactive({billboard_subset() %>%
@@ -96,7 +97,6 @@ top_artists <- reactive({billboard_subset() %>%
     summarise(n_apperance = n()) %>%
     filter(n_apperance > 1) %>%
     arrange(desc(n_apperance))%>% slice(1:10)
-
 })
 #pre-setting the black and white theme
 theme_set(theme_bw())
@@ -104,7 +104,7 @@ theme_set(theme_bw())
 output$plotBar <-renderPlot({
     ggplot(top_artists(), aes(x = artist, y=n_apperance)) +
     geom_bar(stat = "identity",  fill = "slateblue3", width = 0.6 ) +
-     labs(title = "Top Artists", x = "Artists", y = "Number of Apperance on the Top 100") +
+     labs(title = "Top Artists", subtitle="Which artists had the most songs in the Hot 100 in the selected years?",x = "Artists", y = "Number of Apperance on the Top 100") +
      theme(plot.title = element_text(size=15,hjust=-.3,face = "bold"), axis.title =   element_text(size=12)) +
      geom_text(aes(label=top_artists()$n_apperance), hjust = 2, size = 3, color = 'white') +
      coord_flip()
@@ -116,7 +116,7 @@ output$plotBar <-renderPlot({
 plotOutput("plotBar")
 ```
 
-Page 3
+Musical Characterstics
 =====================================
 
 ```{r context="server"}
@@ -133,9 +133,34 @@ g + geom_violin() +
 })
 ```
 
-
 ```{r context="render"}
 
 plotOutput("plotDensity")
 
 ```
+
+
+
+Artist Characteristics
+=====================================
+```{r context="server"}
+
+search_by_artist <- reactive({
+  billboard_subset()[like(artist,input$artist)]
+})
+
+output$DataTable2 <- DT::renderDataTable(
+    DT::datatable(data = search_by_artist(), 
+                  options = list(pageLength = 50, scrollY="300px"), 
+                  rownames = FALSE)
+)
+
+```
+
+```{r context="render"}
+
+dataTableOutput("DataTable2")
+
+```
+
+
