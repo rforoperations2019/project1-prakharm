@@ -1,13 +1,13 @@
 ---
-title: "Billboard Hot 100 Analysis (2000-2018)"
+title: "Billboard Hot 100 Analysis"
 output: 
   flexdashboard::flex_dashboard:
-    orientation: rows
     theme: united
+    orientation: row
 runtime: shiny
 ---
 
-```{r context="setup", include=FALSE}
+```{r global, include=FALSE}
 #importing the required libraries
 library(flexdashboard)
 library(DT)
@@ -20,7 +20,7 @@ library(data.table)# to perform substring match
 #data preprocessing and reactivity
 
 #importing the dataset
-billboard_data <- read.csv("C:/Users/prakh/Desktop/Semester III/R Shiny/Homework 2/billboard.csv")
+billboard_data <- read.csv("billboard.csv")
 
 #extracting the year from the date
 a=mdy(billboard_data$date)
@@ -31,18 +31,13 @@ colnames(billboard_data)[colnames(billboard_data)=="year"] <- "years"
 
 #dropping unnecessary "date" column
 billboard_data = subset(billboard_data, select = -c(date) )
-
-
 ```
 
 
-
-#Sidebar {.sidebar}
+Sidebar {.sidebar}
+=====================================
 
 ```{r context="render"}
-
-
-
 
 checkboxGroupInput("years", "Select the year of release for the song:", 
                    choices = c("2000","2001","2002","2003",
@@ -176,7 +171,6 @@ ggplot(top_mode(), aes(mode))+
 
 ```
 
-
 ```{r context="render"}
 
 plotOutput("plotSeasonal")
@@ -184,30 +178,54 @@ plotOutput("plotSeasonal")
 ```
 
 
-QUICK FACTS! {data-icon="fa-user-circle"}
+
+
+
+Quick Facts {data-icon="fa-file"}
 =====================================
-```{r setup, include=FALSE}
-# these computing functions are only toy examples
-computeSongs = function(...) return(nrow(billboard_data))
-computeArtists = function(...) return(NROW(unique(billboard_data$artist)))
-computeWeeks = function(...) return(round(mean(billboard_data$weeks)))
+
+### Songs that have featured on the Billboard Hot 100! 
+```{r context="server"}
+
+output$vb1 <- renderValueBox({
+  songs<-nrow(billboard_subset())
+  valueBox(songs, color = "olive", icon = "fa-music")
+})
 ```
 
-###Songs that have featured on the Billboard Hot 100! 
-```{r}
-songs = computeSongs()
-valueBox(songs,color = "olive", icon = "fa-music")
+
+```{r context="render"}
+
+valueBoxOutput(outputId = "vb1")
+
 ```
 
-###Number of unique artists and pairings that have featured on the Billboard Hot 100!
-```{r}
-artists = computeArtists()
-valueBox(artists,color = "orange", icon = "fa-volume-up")
+
+
+### Number of unique artists and pairings that have featured on the Billboard Hot 100!
+```{r context="server"}
+output$vb2 <- renderValueBox({
+  artist_vb<-NROW(unique(billboard_subset()$artist))
+  valueBox(artist_vb, color = "orange",icon = "fa-users")
+})
+
 ```
 
-###Average number of weeks that a song spends on the Billboard Hot 100!
-```{r}
-weeks= computeWeeks()
-valueBox(weeks,color = "teal", icon = "fa-calendar-alt")
+```{r context="render"}
+valueBoxOutput(outputId = "vb2")
+```
+
+
+
+### Average number of weeks that a song spends on the Billboard Hot 100!
+```{r context="server"}
+output$vb3 <- renderValueBox({
+  avg_time<-round(mean(billboard_subset()$weeks))
+  valueBox(avg_time, color = "teal",icon = "fa-clock")
+})
+```
+
+```{r context="render"}
+valueBoxOutput(outputId = "vb3")
 ```
 

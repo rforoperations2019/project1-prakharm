@@ -1,0 +1,12 @@
+name: project2-prakharm
+title: project2-prakharm
+username:
+account: prakharm
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 1256476
+bundleId: 2450944
+url: https://prakharm.shinyapps.io/project2-prakharm/
+when: 1569633011.31631
+asMultiple: FALSE
+asStatic: FALSE
